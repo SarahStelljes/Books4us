@@ -11,12 +11,6 @@ const resolvers = {
                 return userData;
             }
             throw new AuthenticationError('Not logged in.');
-        },
-        savedBooks: async (parent, args, context) => {
-            if(context.user){
-                return context.user.savedBooks;
-            }
-            throw new AuthenticationError('Not logged in.');
         }
     },
     Mutation: {
@@ -43,34 +37,33 @@ const resolvers = {
         },
         addBook: async (parents, args, context) => {
             if(context.user){
-                const book = { ...args };
+                const book = { authors: args.authors, description: args.description, bookId: args.bookId, image: args.image, link: args.link, title: args.title };
 
-                await User.findByIdAndUpdate(
+                const addedToSavedBooks = await User.findByIdAndUpdate(
                     { _id: context.user._id },
-                    { $push: { savedBooks: book }},
+                    { $push: { savedBooks: book } },
                     { new: true }
                 );
 
-                return book;
+                return addedToSavedBooks;
             }
 
             return new AuthenticationError('You need to be logged in!');
         },
 
-        // removeBook: async (parents, { bookId }, context) => {
-        //     const bookToBeDeleted = await User.$where(
-        //         function(){
-        //             const theBook;
+        removeBook: async (parents, { bookId }, context) => {
+            if(context.user){
+                const removedFromSavedBooks = await User.findOneAndUpdate(
+                    { _id: context.user._id },
+                    { $pull: { savedBooks: { bookId: bookId } } },
+                    { new: true }
+                )
 
-        //             for(let i = 0; i < context.user.savedBooks.length)
-        //             if(context)
-        //         }
-        //     ) 
-        //     await User.findOneAndUpdate(
-        //         { _id: context.user._id },
-        //         { }
-        //     )
-        // }
+                return removedFromSavedBooks;
+            }
+
+            return new AuthenticationError('You need to be logged in!');
+        }
     }
 };
 
