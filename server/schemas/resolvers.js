@@ -37,11 +37,10 @@ const resolvers = {
         },
         addBook: async (parents, args, context) => {
             if(context.user){
-                const book = { authors: args.authors, description: args.description, bookId: args.bookId, image: args.image, link: args.link, title: args.title };
 
                 const addedToSavedBooks = await User.findByIdAndUpdate(
                     { _id: context.user._id },
-                    { $push: { savedBooks: book } },
+                    { $push: { savedBooks: args } },
                     { new: true }
                 );
 
@@ -57,7 +56,7 @@ const resolvers = {
                     { _id: context.user._id },
                     { $pull: { savedBooks: { bookId: bookId } } },
                     { new: true }
-                )
+                ).populate('savedBooks');
 
                 return removedFromSavedBooks;
             }
